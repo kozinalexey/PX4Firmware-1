@@ -330,6 +330,10 @@ PX4FMU::init()
 	/* reset GPIOs */
 	gpio_reset();
 
+	/* reset sensors */
+	/* to properly discharge lsm303d to avoid BAD ACCEL HEALTH error on IMU2 */
+	sensor_reset(20 /* ms */);
+
 	/* start the IO interface task */
 	_task = task_spawn_cmd("fmuservo",
 			       SCHED_DEFAULT,
