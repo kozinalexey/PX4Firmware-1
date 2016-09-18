@@ -99,7 +99,8 @@ public:
 		MODE_2PWM,
 		MODE_4PWM,
 		MODE_6PWM,
-		MODE_8PWM,//F4Y
+		MODE_8PWM,//F4BY
+		MODE_12PWM,//F4Y12ouput
 	};
 	F4BYFMU();
 	virtual ~F4BYFMU();
@@ -118,7 +119,7 @@ public:
 
 private:
 #if defined(CONFIG_ARCH_BOARD_F4BY)
-	static const unsigned _max_actuators = 8;
+	static const unsigned _max_actuators = 12;
 #endif
 #if defined(CONFIG_ARCH_BOARD_PX4FMU_V1)
 	static const unsigned _max_actuators = 4;
@@ -395,8 +396,20 @@ F4BYFMU::set_mode(Mode mode)
 		/* XXX magic numbers */
 		up_pwm_servo_init(0xff);
 		set_pwm_rate(_pwm_alt_rate_channels, _pwm_default_rate, _pwm_alt_rate);
+		
 		break;
+	case MODE_12PWM: // v1 F4BY MODE_12PWM
+		//debug("MODE_12PWM");	
+		/* default output rates */
+		_pwm_default_rate = 50;
+		_pwm_alt_rate = 50;
+		_pwm_alt_rate_channels = 0;
 
+		/* XXX magic numbers */
+		up_pwm_servo_init(0xfff);
+		set_pwm_rate(_pwm_alt_rate_channels, _pwm_default_rate, _pwm_alt_rate);
+		
+		break;
 	case MODE_NONE:
 		//debug("MODE_NONE");
 
@@ -650,12 +663,15 @@ F4BYFMU::task_main()
 				num_outputs = 6;
 				break;
 
-				case MODE_8PWM:
-					num_outputs = 8;
-					break;
-				default:
-					num_outputs = 0;
-					break;
+			case MODE_8PWM:
+				num_outputs = 8;
+				break;
+			case MODE_12PWM:
+				num_outputs = 12;
+				break;
+			default:
+				num_outputs = 0;
+				break;
 				}
 
 				/* do mixing */
@@ -816,7 +832,8 @@ F4BYFMU::ioctl(file *filp, int cmd, unsigned long arg)
 	case MODE_2PWM:
 	case MODE_4PWM:
 	case MODE_6PWM:
-    case MODE_8PWM:
+        case MODE_8PWM:
+	case MODE_12PWM:
 		ret = pwm_ioctl(filp, cmd, arg);
 		break;
 
@@ -1048,8 +1065,17 @@ F4BYFMU::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 			arg = (unsigned long)&pwm;
 			break;
 		}
-	case PWM_SERVO_SET(7):   //F4Y
-	case PWM_SERVO_SET(6):  //F4Y
+	case PWM_SERVO_SET(11):   //F4BY 12
+	case PWM_SERVO_SET(10):  //F4BY 12
+	case PWM_SERVO_SET(9):   //F4BY 12
+	case PWM_SERVO_SET(8):  //F4BY 12
+	
+		if (_mode < MODE_12PWM) {
+			ret = -EINVAL;
+			break;
+		}
+	case PWM_SERVO_SET(7):   //F4BY
+	case PWM_SERVO_SET(6):  //F4BY
 		if (_mode < MODE_8PWM) {
 			ret = -EINVAL;
 			break;
@@ -1081,6 +1107,14 @@ F4BYFMU::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 		}
 
 		break;
+	case PWM_SERVO_GET(11):
+	case PWM_SERVO_GET(10):
+	case PWM_SERVO_GET(9):
+	case PWM_SERVO_GET(8):
+		if (_mode < MODE_12PWM) {
+			ret = -EINVAL;
+			break;
+		}	
 	case PWM_SERVO_GET(7):
 	case PWM_SERVO_GET(6):
 		if (_mode < MODE_8PWM) {
@@ -1117,12 +1151,19 @@ F4BYFMU::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 	case PWM_SERVO_GET_RATEGROUP(5):
 	case PWM_SERVO_GET_RATEGROUP(6)://F4Y
 	case PWM_SERVO_GET_RATEGROUP(7)://F4Y
+	case PWM_SERVO_GET_RATEGROUP(8)://F4BY12
+	case PWM_SERVO_GET_RATEGROUP(9)://F4BY12
+	case PWM_SERVO_GET_RATEGROUP(10)://F4BY12
+	case PWM_SERVO_GET_RATEGROUP(11)://F4BY12
 		*(uint32_t *)arg = up_pwm_servo_get_rate_group(cmd - PWM_SERVO_GET_RATEGROUP(0));
 		break;
 
 	case PWM_SERVO_GET_COUNT:
 	case MIXERIOCGETOUTPUTCOUNT:
 		switch (_mode) {
+		case MODE_12PWM: //F4BY12
+			*(unsigned *)arg = 12;
+			break;
 		case MODE_8PWM: //F4Y
 			*(unsigned *)arg = 8;
 			break;
@@ -1175,6 +1216,9 @@ F4BYFMU::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 #endif
 		case 8: //F4BY
 			set_mode(MODE_8PWM);
+			break;
+		case 12: //F4BY
+			set_mode(MODE_12PWM);
 			break;
 		
 		default:
@@ -1265,11 +1309,11 @@ ssize_t
 F4BYFMU::write(file *filp, const char *buffer, size_t len)
 {
 	unsigned count = len / 2;
-	uint16_t values[8];//F4BY
+	uint16_t values[12];//F4BY
 
-	if (count > 8) {//F4BY
-		// we have at most 8 outputs//F4BY
-		count = 8;//F4BY
+	if (count > 12) {//F4BY
+		// we have at most 12 outputs//F4BY
+		count = 12;//F4BY
 	}
 
 	// allow for misaligned values
@@ -1528,14 +1572,14 @@ fmu_new_mode(PortMode new_mode)
 		break;
 
 	case PORT_FULL_PWM:
-		/* select 8-pin PWM mode */
-		servo_mode = F4BYFMU::MODE_8PWM;//F4BY
+		/* select 12-pin PWM mode */
+		servo_mode = F4BYFMU::MODE_12PWM;//F4BY
 		break;
 
 	
 	case PORT_PWM_AND_GPIO:
 		/* select 2-pin PWM mode */
-		servo_mode = F4BYFMU::MODE_8PWM;
+		servo_mode = F4BYFMU::MODE_12PWM;
 		break;
 
 	default:
