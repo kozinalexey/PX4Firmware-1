@@ -147,6 +147,21 @@
 # define GPIO_EXT_2		(1<<1)		/**< high-power GPIO 1 */
 # define GPIO_EXT_3		(1<<2)		/**< high-power GPIO 1 */
 
+
+# define GPIO_SERVO_1			(1<<0)		/**< servo 1 output */
+# define GPIO_SERVO_2			(1<<1)		/**< servo 2 output */
+# define GPIO_SERVO_3			(1<<2)		/**< servo 3 output */
+# define GPIO_SERVO_4			(1<<3)		/**< servo 4 output */
+# define GPIO_SERVO_5			(1<<4)		/**< servo 5 output */
+# define GPIO_SERVO_6			(1<<5)		/**< servo 6 output */
+# define GPIO_SERVO_7			(1<<6)		/**< servo 7 output */
+# define GPIO_SERVO_8			(1<<7)		/**< servo 8 output */
+# define GPIO_SERVO_9			(1<<8)		/**< servo 9 output */
+# define GPIO_SERVO_10			(1<<9)		/**< servo 10 output */
+# define GPIO_SERVO_11			(1<<10)		/**< servo 11 output */
+# define GPIO_SERVO_12			(1<<11)		/**< servo 12 output */
+
+
 # define F4BY_DEVICE_PATH	"/dev/f4by_fmu"
 # define F4BY_INPUT_DEVICE_PATH "/dev/f4by_input"
 #endif
