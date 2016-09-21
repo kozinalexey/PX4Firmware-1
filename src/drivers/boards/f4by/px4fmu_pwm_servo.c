@@ -152,6 +152,14 @@ __EXPORT const timer_io_channels_t timer_io_channels[MAX_TIMER_IO_CHANNELS] = {
 		.masks  = GTIM_SR_CC4IF | GTIM_SR_CC4OF
 	},
 	{
+		.gpio_out = GPIO_TIM4_CH2OUT,
+		.gpio_in  = GPIO_TIM4_CH2IN,
+		.timer_index = 2,
+		.timer_channel = 2,
+		.ccr_offset = STM32_GTIM_CCR2_OFFSET,
+		.masks  = GTIM_SR_CC2IF | GTIM_SR_CC2OF
+	},
+	{
 		.gpio_out = GPIO_TIM4_CH1OUT,
 		.gpio_in  = GPIO_TIM4_CH1IN,
 		.timer_index = 2,
@@ -160,12 +168,12 @@ __EXPORT const timer_io_channels_t timer_io_channels[MAX_TIMER_IO_CHANNELS] = {
 		.masks  = GTIM_SR_CC1IF | GTIM_SR_CC1OF
 	},
 	{
-		.gpio_out = GPIO_TIM4_CH1OUT,
-		.gpio_in  = GPIO_TIM4_CH1IN,
+		.gpio_out = GPIO_TIM4_CH4OUT,
+		.gpio_in = GPIO_TIM4_CH4IN,
 		.timer_index = 2,
-		.timer_channel = 2,
-		.ccr_offset = STM32_GTIM_CCR2_OFFSET,
-		.masks  = GTIM_SR_CC2IF | GTIM_SR_CC2OF
+		.timer_channel = 4,
+		.ccr_offset = STM32_GTIM_CCR4_OFFSET,
+		.masks  = GTIM_SR_CC4IF | GTIM_SR_CC4OF
 	},
 	{
 		.gpio_out = GPIO_TIM4_CH3OUT,
@@ -174,13 +182,6 @@ __EXPORT const timer_io_channels_t timer_io_channels[MAX_TIMER_IO_CHANNELS] = {
 		.timer_channel = 3,
 		.ccr_offset = STM32_GTIM_CCR3_OFFSET,
 		.masks  = GTIM_SR_CC3IF | GTIM_SR_CC3OF
-	},
-	{
-		.gpio_out = GPIO_TIM4_CH4OUT,
-		.gpio_in = GPIO_TIM4_CH4IN,
-		.timer_index = 2,
-		.timer_channel = 4,
-		.ccr_offset = STM32_GTIM_CCR4_OFFSET,
-		.masks  = GTIM_SR_CC4IF | GTIM_SR_CC4OF
 	}
+
 };
