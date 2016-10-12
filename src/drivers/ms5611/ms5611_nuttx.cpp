@@ -838,9 +838,9 @@ struct ms5611_bus_option {
 #ifdef PX4_I2C_BUS_ONBOARD
 	{ MS5611_BUS_I2C_INTERNAL, "/dev/ms5611_int", &MS5611_i2c_interface, PX4_I2C_BUS_ONBOARD, NULL },
 #endif
-#ifdef PX4_I2C_BUS_EXPANSION
-	{ MS5611_BUS_I2C_EXTERNAL, "/dev/ms5611_ext", &MS5611_i2c_interface, PX4_I2C_BUS_EXPANSION, NULL },
-#endif
+//#ifdef PX4_I2C_BUS_EXPANSION
+//	{ MS5611_BUS_I2C_EXTERNAL, "/dev/ms5611_ext", &MS5611_i2c_interface, PX4_I2C_BUS_EXPANSION, NULL },
+//#endif
 };
 #define NUM_BUS_OPTIONS (sizeof(bus_options)/sizeof(bus_options[0]))
 
