@@ -165,6 +165,9 @@ private:
 	unsigned	_num_failsafe_set;
 	unsigned	_num_disarmed_set;
 
+	bool		_oneshot_mode;
+	hrt_abstime	_oneshot_delay_till;
+
 	static void	task_main_trampoline(int argc, char *argv[]);
 	void		task_main();
 
@@ -244,7 +247,9 @@ F4BYFMU::F4BYFMU() :
 	_disarmed_pwm{0},
 	_reverse_pwm_mask(0),
 	_num_failsafe_set(0),
-	_num_disarmed_set(0)
+	_num_disarmed_set(0),
+	_oneshot_mode(false),
+	_oneshot_delay_till(0)
 {
 	for (unsigned i = 0; i < _max_actuators; i++) {
 		_min_pwm[i] = PWM_DEFAULT_MIN;
@@ -1219,6 +1224,7 @@ F4BYFMU::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 		case 8: //F4BY
 			set_mode(MODE_8PWM);
 			break;
+
 		case 12: //F4BY
 			set_mode(MODE_12PWM);
 			break;
@@ -1229,6 +1235,11 @@ F4BYFMU::pwm_ioctl(file *filp, int cmd, unsigned long arg)
 		}
 		break;
 	}
+
+	case PWM_SERVO_SET_ONESHOT:
+		_oneshot_mode = arg ? true : false;
+		ret = OK;
+		break;
 
 	case MIXERIOCRESET:
 		if (_mixers != nullptr) {
@@ -1321,10 +1332,37 @@ F4BYFMU::write(file *filp, const char *buffer, size_t len)
 	// allow for misaligned values
 	memcpy(values, buffer, count * 2);
 
-	for (uint8_t i = 0; i < count; i++) {
-		if (values[i] != PWM_IGNORE_THIS_CHANNEL) {
-			up_pwm_servo_set(i, values[i]);
+	if (_oneshot_mode) {
+		hrt_abstime now = hrt_absolute_time();
+
+		/*
+		  when doing oneshot we need to guarantee that one
+		  pulse won't interrupt the previous pulse, while
+		  still getting the new pulse out as quickly as
+		  possible. To do this we need to wait till the widest
+		  pulse of the last output has finished. We add 50
+		  microseconds to ensure the ESC has registered the
+		  end of the pulse
+		 */
+		if (now < _oneshot_delay_till) {
+			up_udelay(_oneshot_delay_till - now);
 		}
+	}
+
+	uint16_t widest_pulse = 0;
+
+	for (uint8_t i = 0; i < count; i++) {
+			if (values[i] != PWM_IGNORE_THIS_CHANNEL) {
+				up_pwm_servo_set(i, values[i]);
+				if (values[i] > widest_pulse) {
+					widest_pulse = values[i];
+				}
+			}
+		}
+
+	if (_oneshot_mode) {
+		up_pwm_servo_trigger(_pwm_alt_rate_channels);
+		_oneshot_delay_till = hrt_absolute_time() + widest_pulse + 50;
 	}
 
 	return count * 2;
