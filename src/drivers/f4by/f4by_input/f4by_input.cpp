@@ -302,9 +302,9 @@ void F4BY_INPUT::controls_tick()
 	if(updated)
 	{
 		rc_in.channel_count = r_raw_rc_count;
-		if (rc_in.channel_count > 8) 
+		if (rc_in.channel_count > 18) 
 		{
-			rc_in.channel_count = 8;
+			rc_in.channel_count = 18;
 		}
 
 		for (uint8_t i = 0; i < rc_in.channel_count; i++) 
